@@ -14,7 +14,10 @@ namespace YourWallpaperIsMine.Core
     {
         const string SERVER_URL = @"http://192.168.0.12:8000/geturl";
         private string imagePath = @"";
-        public bool GetImageURL()
+
+        private JArray jsonResult;
+
+        public void GetImageURL()
         {
             string responseText = string.Empty;
 
@@ -33,30 +36,49 @@ namespace YourWallpaperIsMine.Core
                 }
             }
 
-            
-            //responseText = responseText.Replace("[", "{");
-            //responseText = responseText.Replace("]", "}");
-            Console.WriteLine(responseText);
-
-            var jsonResult = JArray.Parse(responseText);
+            jsonResult = JArray.Parse(responseText);
 
 
-            Console.WriteLine(jsonResult[1]["imageUrl"]);
-            imagePath = jsonResult[1]["imageUrl"].ToString();
-            return true;
+            GetRandomCount(jsonResult);
+
         }
-        
 
-        public void DownloadImage()
+        private void GetRandomCount(JArray jsonResult)
+        {
+            int count = jsonResult.Count();
+            Random random = new Random();
+            int randomNumber = random.Next(1, count);
+
+            //Console.WriteLine(jsonResult[1]["imageUrl"]);
+            imagePath = jsonResult[randomNumber]["imageUrl"].ToString();
+        }
+        private int errorCount = 0;
+
+        public bool DownloadImage()
         {
             if(!Directory.Exists(Path.GetTempPath() + "YourWallpaperIsMine"))
             {
                 Directory.CreateDirectory(Path.GetTempPath() + "YourWallpaperIsMine");
             }
-            using (var client = new WebClient())
+            try
             {
-                client.DownloadFile(@imagePath, Path.GetTempPath() + "YourWallpaperIsMine\\temp.jpg");
+                using (var client = new WebClient())
+                {
+                    client.DownloadFile(@imagePath, Path.GetTempPath() + "YourWallpaperIsMine\\temp.jpg");
+                    return true;
+                }
             }
+            catch
+            {
+                GetRandomCount(jsonResult);
+                errorCount++;
+                if (errorCount == 5)
+                {
+                    return false;
+                }
+                DownloadImage();
+            }
+            return true;
         }
     }
 }

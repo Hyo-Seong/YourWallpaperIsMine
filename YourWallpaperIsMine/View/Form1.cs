@@ -20,8 +20,13 @@ namespace YourWallpaperIsMine
             InitializeComponent();
             HttpConnection httpConnection = new HttpConnection();
             httpConnection.GetImageURL();
-            httpConnection.DownloadImage();
-            Wallpaper.Set(Path.GetTempPath() + "YourWallpaperIsMine\\temp.jpg", Style.Centered);
+            if (!httpConnection.DownloadImage())
+            {
+                return;
+            }
+            Wallpaper.Set(Path.GetTempPath() + "YourWallpaperIsMine\\temp.jpg", Style.Tiled);
         }
+    
+    
     }
 }
